@@ -1041,7 +1041,11 @@ JORDÂNIA X ARGENTINA,2X0,,1X3,0X2,1X3,0X4,0X1,1X4,1X3,0X2,0X2,1X3,2X1,0X3,1X2,1
           setSyncMsg("Buscando placares...");
 
           try {
-            const res = await fetch("https://api.football-data.org/v4/competitions/WC/matches", {
+            // Usamos um Proxy gratuito para driblar o bloqueio de CORS da API
+            const urlAlvo = "https://api.football-data.org/v4/competitions/WC/matches";
+            const proxy = "https://corsproxy.io/?";
+            
+            const res = await fetch(proxy + encodeURIComponent(urlAlvo), {
               headers: { "X-Auth-Token": API_FOOTBALL_KEY },
             });
             if (!res.ok) throw new Error(`HTTP ${res.status}`);
