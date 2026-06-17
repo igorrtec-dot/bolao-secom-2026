@@ -6,16 +6,8 @@
     <meta name="theme-color" content="#0a0a0a" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-
-    <!-- Link para o Manifesto PWA -->
-    <link rel="manifest" href="manifest.json" />
-    
-    <!-- Ícone nativo para a tela do iPhone -->
-    <link rel="apple-touch-icon" href="Logo.jpg" />
-    
     <title>⚽ BOLÃO DA SECOM 2026</title>
 
-    <!-- DEPENDÊNCIAS -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
@@ -355,7 +347,6 @@
   </head>
 
   <body>
-    <!-- Tela de carregamento inicial -->
     <div id="splash-screen">
       <div class="splash-logo-wrap">
         <img src="Logo.jpg" alt="Copa do Mundo FIFA 2026" />
@@ -369,9 +360,7 @@
     <script type="text/babel">
       const { useState, useMemo, useEffect, useCallback, useRef } = React;
 
-      /* Token football-data.org — salvo no dispositivo (não expor no código) */
-      const getApiToken = () => localStorage.getItem("secom_api_token") || "";
-      const setApiToken = (t) => { try { localStorage.setItem("secom_api_token", t.trim()); } catch {} };
+      const API_FOOTBALL_KEY = "e4e06be299b8420da11d34a38b292430";
 
       /* ─── PALETA DE CORES CENTRALIZADA ───────────────────── */
       const C = {
@@ -741,7 +730,6 @@ JORDÂNIA X ARGENTINA,2X0,,1X3,0X2,1X3,0X4,0X1,1X4,1X3,0X2,0X2,1X3,2X1,0X3,1X2,1
         const [autoSync, setAutoSync]     = useState(false);
         const [jogosAoVivo, setJogosAoVivo] = useState({});
         const [bracketSubAba, setBracketSubAba] = useState("esquerdo");
-        const [apiTokenInput, setApiTokenInput] = useState(() => getApiToken());
 
         const [participantes, setParticipantes] = useState(() => lsGet("secom_participantes", PARTICIPANTES_INICIAIS));
         const [palpites, setPalpites]           = useState(() => lsGet("secom_palpites", PALPITES_INICIAIS));
@@ -1053,14 +1041,8 @@ JORDÂNIA X ARGENTINA,2X0,,1X3,0X2,1X3,0X4,0X1,1X4,1X3,0X2,0X2,1X3,2X1,0X3,1X2,1
           setSyncMsg("Buscando placares...");
 
           try {
-            const token = getApiToken();
-            if (!token) {
-              setSyncStatus("erro");
-              setSyncMsg("Configure o token da API em Galera → Sync API.");
-              return;
-            }
             const res = await fetch("https://api.football-data.org/v4/competitions/WC/matches", {
-              headers: { "X-Auth-Token": token },
+              headers: { "X-Auth-Token": API_FOOTBALL_KEY },
             });
             if (!res.ok) throw new Error(`HTTP ${res.status}`);
 
@@ -1770,30 +1752,6 @@ JORDÂNIA X ARGENTINA,2X0,,1X3,0X2,1X3,0X4,0X1,1X4,1X3,0X2,0X2,1X3,2X1,0X3,1X2,1
                 <div className="anim-cascade">
                   <h2 className="section-title">Galera do Bolão</h2>
 
-                  <div className="card" style={{ marginBottom: 16 }}>
-                    <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 800, fontSize: 12, color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: 1, marginBottom: 8 }}>
-                      🔑 Sync API (football-data.org)
-                    </div>
-                    <input
-                      type="password"
-                      style={{ width: "100%", background: "var(--bg-input)", border: "1.5px solid var(--border-color)", borderRadius: 10, padding: "12px 14px", color: "var(--text-main)", outline: "none", marginBottom: 8 }}
-                      placeholder="Cole seu token aqui..."
-                      value={apiTokenInput}
-                      onChange={e => setApiTokenInput(e.target.value)}
-                    />
-                    <button
-                      type="button"
-                      className="btn-secondary"
-                      style={{ width: "100%" }}
-                      onClick={() => { setApiToken(apiTokenInput); alert("Token salvo neste aparelho."); }}
-                    >
-                      Salvar token
-                    </button>
-                    <p style={{ fontSize: 10, color: "var(--text-muted)", margin: "8px 0 0", lineHeight: 1.4 }}>
-                      O token fica só no seu celular. A sync automática pode falhar no navegador (CORS) — use o app Android ou lance placares manualmente.
-                    </p>
-                  </div>
-
                   <div className="btn-row">
                     <button
                       type="button"
@@ -1975,7 +1933,7 @@ JORDÂNIA X ARGENTINA,2X0,,1X3,0X2,1X3,0X4,0X1,1X4,1X3,0X2,0X2,1X3,2X1,0X3,1X2,1
                     )
                     : (
                       <div style={{ background:"var(--bg-card)", borderRadius:10, border:"1px solid var(--border-color)", padding:24, boxShadow:"var(--shadow-card)" }}>
-                        <div style={{ position:"relative", height:320, width:"100%" }}>
+                        <div style={{ position:"relative", height:480, width:"100%" }}>
                           <canvas id="evolutionChart"></canvas>
                         </div>
                       </div>
