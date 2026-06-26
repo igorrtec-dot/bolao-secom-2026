@@ -1077,6 +1077,28 @@ JORDÂNIA X ARGENTINA,2X0,1X4,1X3,0X2,1X3,0X4,0X1,1X4,1X3,0X2,0X2,1X3,2X1,0X3,1X
               }
             });
 
+            /* ════════════════════════════════════════════════════════════
+               INJEÇÃO MANUAL DE RESULTADOS (TRAVA DE SEGURANÇA)
+               Substitua os placares abaixo pelos resultados oficiais!
+            ════════════════════════════════════════════════════════════ */
+            const jogosManuais = [
+              { mandante: "Tcheca", visitante: "México", placar: "0-3" }, // <-- MUDE AQUI
+              { mandante: "África", visitante: "Korea", placar: "1-0" }   // <-- MUDE AQUI
+            ];
+
+            jogosManuais.forEach(jm => {
+              // Procura o jogo no JOGOS_COPA usando pedaços do nome para não ter erro
+              const jogo = JOGOS_COPA.find(j => 
+                limpaNome(j.mandante).includes(limpaNome(jm.mandante)) && 
+                limpaNome(j.visitante).includes(limpaNome(jm.visitante))
+              );
+              
+              // Se achar o jogo, injeta o placar à força
+              if (jogo && novosRes[jogo.id] !== jm.placar) {
+                novosRes[jogo.id] = jm.placar;
+                atualizados++;
+              }
+            });
             setResultados(novosRes);
             setJogosAoVivo(liveMap);
             setUltimaSync(new Date());
