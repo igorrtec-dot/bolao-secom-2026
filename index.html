@@ -1087,6 +1087,19 @@ JORDÂNIA X ARGENTINA,2X0,,1X3,0X2,1X3,0X4,0X1,1X4,1X3,0X2,0X2,1X3,2X1,0X3,1X2,1
               }
             });
 
+            setResultados(novosRes);
+            setJogosAoVivo(liveMap);
+            setUltimaSync(new Date());
+            setSyncStatus("ok");
+            setSyncMsg(atualizados > 0 ? `${atualizados} placar(es) atualizado(s)!` : "Tudo atualizado.");
+          } catch (err) {
+            setSyncStatus("erro");
+            const msg = err.message.includes("Failed to fetch")
+              ? "Sem conexão ou bloqueio CORS — lance placares manualmente."
+              : `Falha: ${err.message}`;
+            setSyncMsg(msg);
+          }
+        }, [resultados]);
               const h = m.score?.fullTime?.home;
               const a = m.score?.fullTime?.away;
               if (h !== null && h !== undefined && a !== null && a !== undefined) {
