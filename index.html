@@ -1078,6 +1078,33 @@ JORDÂNIA X ARGENTINA,2X0,,1X3,0X2,1X3,0X4,0X1,1X4,1X3,0X2,0X2,1X3,2X1,0X3,1X2,1
               }
             });
 
+            /* ════════════════════════════════════════════════════════════
+               INJEÇÃO MANUAL DE RESULTADOS (TRAVA DE SEGURANÇA)
+            ════════════════════════════════════════════════════════════ */
+            const jogosManuais = [
+              { mandante: "tcheca", visitante: "mex", placar: "0-3" },
+              { mandante: "fric", visitante: "ore", placar: "1-0" } 
+            ];
+
+            jogosManuais.forEach(jm => {
+              const jogo = JOGOS_COPA.find(j => 
+                (limpaNome(j.mandante).includes(limpaNome(jm.mandante)) && limpaNome(j.visitante).includes(limpaNome(jm.visitante))) ||
+                (limpaNome(j.mandante).includes(limpaNome(jm.visitante)) && limpaNome(j.visitante).includes(limpaNome(jm.mandante)))
+              );
+              
+              if (jogo && novosRes[jogo.id] !== jm.placar) {
+                const isInvertido = limpaNome(jogo.mandante).includes(limpaNome(jm.visitante));
+                const placarFinal = isInvertido ? jm.placar.split('-').reverse().join('-') : jm.placar;
+                
+                novosRes[jogo.id] = placarFinal;
+                atualizados++;
+              }
+            });
+            /* ════════════════════════════════════════════════════════════ */
+
+            // LOGO ABAIXO DISSO VAI ESTAR O SEU:
+            // setResultados(novosRes);
+            
             setResultados(novosRes);
             setJogosAoVivo(liveMap);
             setUltimaSync(new Date());
