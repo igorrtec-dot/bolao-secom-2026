@@ -1036,7 +1036,7 @@ JORDÂNIA X ARGENTINA,2X0,,1X3,0X2,1X3,0X4,0X1,1X4,1X3,0X2,0X2,1X3,2X1,0X3,1X2,1
           };
         }, [aba, resultados, palpites, classificacao, isDarkMode]);
 
-        const sincronizarAPI = useCallback(async () => {
+const sincronizarAPI = useCallback(async () => {
           setSyncStatus("loading");
           setSyncMsg("Buscando placares...");
 
@@ -1060,10 +1060,9 @@ JORDÂNIA X ARGENTINA,2X0,,1X3,0X2,1X3,0X4,0X1,1X4,1X3,0X2,0X2,1X3,2X1,0X3,1X2,1
               const mand = normalizarNome(m.homeTeam?.name || "");
               const vis  = normalizarNome(m.awayTeam?.name || "");
 
-              // BUSCA INTELIGENTE: Aceita a ordem normal OU os times invertidos
               const jogo = JOGOS_COPA.find(
-                jl => (limpaNome(jl.mandante) === limpaNome(mand) && limpaNome(jl.visitante) === limpaNome(vis)) ||
-                      (limpaNome(jl.mandante) === limpaNome(vis) && limpaNome(jl.visitante) === limpaNome(mand))
+                jl => limpaNome(jl.mandante)  === limpaNome(mand) &&
+                      limpaNome(jl.visitante) === limpaNome(vis)
               );
               if (!jogo) return;
 
@@ -1074,41 +1073,35 @@ JORDÂNIA X ARGENTINA,2X0,,1X3,0X2,1X3,0X4,0X1,1X4,1X3,0X2,0X2,1X3,2X1,0X3,1X2,1
               const h = m.score?.fullTime?.home;
               const a = m.score?.fullTime?.away;
               if (h !== null && h !== undefined && a !== null && a !== undefined) {
-                // Verifica se a API mandou o jogo ao contrário da nossa tabela
-                const isInvertido = limpaNome(jogo.mandante) === limpaNome(vis);
-                
-                // Se estiver invertido, a gente cruza os gols (Gols do Visitante - Gols do Mandante)
-                const placar = isInvertido ? `${a}-${h}` : `${h}-${a}`;
-                
-                if (novosRes[jogo.id] !== placar) { 
-                  novosRes[jogo.id] = placar; 
-                  atualizados++; 
-                }
-              }
-            });
-
-            setResultados(novosRes);
-            setJogosAoVivo(liveMap);
-            setUltimaSync(new Date());
-            setSyncStatus("ok");
-            setSyncMsg(atualizados > 0 ? `${atualizados} placar(es) atualizado(s)!` : "Tudo atualizado.");
-          } catch (err) {
-            setSyncStatus("erro");
-            const msg = err.message.includes("Failed to fetch")
-              ? "Sem conexão ou bloqueio CORS — lance placares manualmente."
-              : `Falha: ${err.message}`;
-            setSyncMsg(msg);
-          }
-        }, [resultados]);
-              const h = m.score?.fullTime?.home;
-              const a = m.score?.fullTime?.away;
-              if (h !== null && h !== undefined && a !== null && a !== undefined) {
                 const placar = `${h}-${a}`;
                 if (novosRes[jogo.id] !== placar) { novosRes[jogo.id] = placar; atualizados++; }
               }
-            };
+            });
 
-            
+            /* ════════════════════════════════════════════════════════════
+               INJEÇÃO MANUAL DE RESULTADOS (TRAVA DE SEGURANÇA)
+            ════════════════════════════════════════════════════════════ */
+            const jogosManuais = [
+              { mandante: "tcheca", visitante: "mex", placar: "0-3" },
+              { mandante: "fric", visitante: "ore", placar: "1-0" } 
+            ];
+
+            jogosManuais.forEach(jm => {
+              const jogo = JOGOS_COPA.find(j => 
+                (limpaNome(j.mandante).includes(limpaNome(jm.mandante)) && limpaNome(j.visitante).includes(limpaNome(jm.visitante))) ||
+                (limpaNome(j.mandante).includes(limpaNome(jm.visitante)) && limpaNome(j.visitante).includes(limpaNome(jm.mandante)))
+              );
+              
+              if (jogo && novosRes[jogo.id] !== jm.placar) {
+                const isInvertido = limpaNome(jogo.mandante).includes(limpaNome(jm.visitante));
+                const placarFinal = isInvertido ? jm.placar.split('-').reverse().join('-') : jm.placar;
+                
+                novosRes[jogo.id] = placarFinal;
+                atualizados++;
+              }
+            });
+            /* ════════════════════════════════════════════════════════════ */
+
             setResultados(novosRes);
             setJogosAoVivo(liveMap);
             setUltimaSync(new Date());
