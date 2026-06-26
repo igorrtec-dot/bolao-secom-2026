@@ -602,23 +602,24 @@ ESCÓCIA X HAITI,1X1,1X1,2X1,1X1,0X1,1X0,2X1,2X1,0X1,1X0,2X0,2X1,0X1,1X0,1X1,1X0
 CURAÇAO X ALEMANHA,1X3,0X5,0X4,0X2,0X3,0X4,0X2,0X4,0X2,0X3,0X2,0X5,1X4,0X2,0X4,1X3,1X3
 EQUADOR X COSTA DO MARFIM,0X1,1X2,2X1,1X1,0X2,2X1,1X0,2X1,0X2,1X1,1X1,1X2,1X2,1X2,2X1,0X2,1X1`;
       /* ════════════════════════════════════════════════════════════
-         PARSER: CSV → objeto { participanteId: { jogoId: placar } }
+         NOVO PARSER: Busca o jogo pelo NOME, não pela linha!
       ════════════════════════════════════════════════════════════ */
       const PALPITES_INICIAIS = (() => {
-        const ordemIds = [
-          1,2,7,19,8,13,14,20,25,31,26,32,43,37,44,38,49,50,55,56,61,67,68,62,
-          3,9,10,4,22,15,16,21,33,27,28,34,45,39,46,40,57,51,52,58,63,69,70,64,
-          11,12,18,17,6,5,30,29,36,35,23,24,53,54,47,48,42,41,71,72,65,66,59,60
-        ];
-
         const resultado = {};
         PARTICIPANTES_INICIAIS.forEach(p => { resultado[p.id] = {}; });
 
-        CSV_DADOS.split("\n").forEach((linha, rowIdx) => {
+        CSV_DADOS.split("\n").forEach((linha) => {
           if (!linha.trim()) return;
-          const colunas   = linha.split(",");
-          const idDoJogo  = ordemIds[rowIdx];
-          if (!idDoJogo) return;
+          const colunas = linha.split(",");
+          const nomeJogoRaw = colunas[0].trim();
+          
+          // Busca o jogo exato no nosso array JOGOS_COPA
+          const jogo = JOGOS_COPA.find(j => 
+            nomeJogoRaw.includes(j.mandante.split(' ')[0]) && 
+            nomeJogoRaw.includes(j.visitante.split(' ')[0])
+          );
+          
+          if (!jogo) return;
 
           colunas.slice(1).forEach((placarBruto, pIdx) => {
             const participanteId = 101 + pIdx;
@@ -626,19 +627,12 @@ EQUADOR X COSTA DO MARFIM,0X1,1X2,2X1,1X1,0X2,2X1,1X0,2X1,0X2,1X1,1X1,1X2,1X2,1X
             const placar = placarBruto.trim();
             if (!placar) return;
 
-            const placarNormalizado = placar
-              .toUpperCase()
-              .replace(/X/g, "-")
-              .replace(/O/g, "0");
-
-            resultado[participanteId][idDoJogo] = placarNormalizado.toLowerCase()
-              .replace("-", "-"); 
+            resultado[participanteId][jogo.id] = placar.toLowerCase().replace("x", "-");
           });
         });
-
         return resultado;
       })();
-
+      
       /* ════════════════════════════════════════════════════════════
          UTILITÁRIOS DE EXPORTAÇÃO
       ════════════════════════════════════════════════════════════ */
