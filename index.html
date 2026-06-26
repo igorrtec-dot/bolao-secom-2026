@@ -602,7 +602,7 @@ ESCÓCIA X HAITI,1X1,1X1,2X1,1X1,0X1,1X0,2X1,2X1,0X1,1X0,2X0,2X1,0X1,1X0,1X1,1X0
 CURAÇAO X ALEMANHA,1X3,0X5,0X4,0X2,0X3,0X4,0X2,0X4,0X2,0X3,0X2,0X5,1X4,0X2,0X4,1X3,1X3
 EQUADOR X COSTA DO MARFIM,0X1,1X2,2X1,1X1,0X2,2X1,1X0,2X1,0X2,1X1,1X1,1X2,1X2,1X2,2X1,0X2,1X1`;
       /* ════════════════════════════════════════════════════════════
-         NOVO PARSER: Busca o jogo pelo NOME, não pela linha!
+         PARSER: Busca o jogo de forma flexível pelo NOME
       ════════════════════════════════════════════════════════════ */
       const PALPITES_INICIAIS = (() => {
         const resultado = {};
@@ -611,25 +611,50 @@ EQUADOR X COSTA DO MARFIM,0X1,1X2,2X1,1X1,0X2,2X1,1X0,2X1,0X2,1X1,1X1,1X2,1X2,1X
         CSV_DADOS.split("\n").forEach((linha) => {
           if (!linha.trim()) return;
           const colunas = linha.split(",");
-          const nomeJogoRaw = colunas[0].trim();
           
-          // Busca o jogo exato no nosso array JOGOS_COPA
-          const jogo = JOGOS_COPA.find(j => 
-            nomeJogoRaw.includes(j.mandante.split(' ')[0]) && 
-            nomeJogoRaw.includes(j.visitante.split(' ')[0])
-          );
+          // Ex: "mexico 2 x 0 africa do sul"
+          const nomeJogoRaw = limpaNome(colunas[0]); 
           
-          if (!jogo) return;
+          // Remove os números do nome da linha para encontrar os times
+          const partes = nomeJogoRaw.replace(/\d+/g, '').split(' x ');
+          if (partes.length < 2) return;
+          
+          // Pega só a primeira palavra para garantir (ex: "coreia", "africa", "rep")
+          const mandanteRaw = partes[0].trim().split(' ')[0]; 
+          const visitanteRaw = partes[1].trim().split(' ')[0];
+
+          // Procura o ID do jogo na tabela oficial da Copa
+          const jogo = JOGOS_COPA.find(j => {
+            const m = limpaNome(j.mandante);
+            const v = limpaNome(j.visitante);
+            
+            // Aceita bi-direcional (caso na tabela esteja Visitante x Mandante)
+            return (m.includes(mandanteRaw) && v.includes(visitanteRaw)) || 
+                   (m.includes(visitanteRaw) && v.includes(mandanteRaw));
+          });
+          
+          if (!jogo) return; // Se não achar o jogo, ignora a linha
+
+          // Se o jogo estava invertido na planilha, precisamos inverter o placar do usuário
+          const isInvertido = limpaNome(jogo.mandante).includes(visitanteRaw);
 
           colunas.slice(1).forEach((placarBruto, pIdx) => {
             const participanteId = 101 + pIdx;
             if (!resultado[participanteId]) return;
+            
             const placar = placarBruto.trim();
-            if (!placar) return;
+            // Ignora se estiver vazio ou NaN (caso do Anderson)
+            if (!placar || placar.toUpperCase() === "NAN") return;
 
-            resultado[participanteId][jogo.id] = placar.toLowerCase().replace("x", "-");
+            const placarNormalizado = placar.toUpperCase().replace(/X/g, "-").replace(/O/g, "0");
+            
+            // Salva o palpite do usuário (invertendo os gols se necessário)
+            resultado[participanteId][jogo.id] = isInvertido 
+                ? placarNormalizado.split('-').reverse().join('-') 
+                : placarNormalizado;
           });
         });
+        
         return resultado;
       })();
       
