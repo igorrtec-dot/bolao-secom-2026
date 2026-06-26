@@ -1082,10 +1082,26 @@ JORDÂNIA X ARGENTINA,2X0,1X4,1X3,0X2,1X3,0X4,0X1,1X4,1X3,0X2,0X2,1X3,2X1,0X3,1X
                Substitua os placares abaixo pelos resultados oficiais!
             ════════════════════════════════════════════════════════════ */
             const jogosManuais = [
-              { mandante: "Tcheca", visitante: "México", placar: "0-3" }, // <-- MUDE AQUI
-              { mandante: "África", visitante: "Korea", placar: "1-0" },   // <-- MUDE AQUI
+              { mandante: "tcheca", visitante: "mex", placar: "0-3" }, 
+              { mandante: "fric", visitante: "ore", placar: "1-0" }, // 'ore' pega KOREA e COREIA
             ];
 
+            jogosManuais.forEach(jm => {
+              const jogo = JOGOS_COPA.find(j => 
+                // Colocamos um bi-direcional caso os times estejam invertidos no seu sistema!
+                (limpaNome(j.mandante).includes(limpaNome(jm.mandante)) && limpaNome(j.visitante).includes(limpaNome(jm.visitante))) ||
+                (limpaNome(j.mandante).includes(limpaNome(jm.visitante)) && limpaNome(j.visitante).includes(limpaNome(jm.mandante)))
+              );
+              
+              if (jogo && novosRes[jogo.id] !== jm.placar) {
+                // Inverte o placar se o sistema achar o jogo ao contrário do que digitamos
+                const isInvertido = limpaNome(jogo.mandante).includes(limpaNome(jm.visitante));
+                const placarFinal = isInvertido ? jm.placar.split('-').reverse().join('-') : jm.placar;
+                
+                novosRes[jogo.id] = placarFinal;
+                atualizados++;
+              }
+            });
             jogosManuais.forEach(jm => {
               // Procura o jogo no JOGOS_COPA usando pedaços do nome para não ter erro
               const jogo = JOGOS_COPA.find(j => 
