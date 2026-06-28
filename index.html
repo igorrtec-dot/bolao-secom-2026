@@ -1057,13 +1057,17 @@ JORDÂNIA X ARGENTINA,2X0,1X4,1X3,0X2,1X3,0X4,0X1,1X4,1X3,0X2,0X2,1X3,2X1,0X3,1X
             const novosRes  = { ...resultados };
 
             jogos.forEach(m => {
-              const mand = normalizarNome(m.homeTeam?.name || "");
-              const vis  = normalizarNome(m.awayTeam?.name || "");
+              const mandAPI = limpaNome(normalizarNome(m.homeTeam?.name || ""));
+              const visAPI  = limpaNome(normalizarNome(m.awayTeam?.name || ""));
 
-              const jogo = JOGOS_COPA.find(
-                jl => limpaNome(jl.mandante)  === limpaNome(mand) &&
-                      limpaNome(jl.visitante) === limpaNome(vis)
-              );
+              // Busca inteligente: encontra o jogo mesmo se os times estiverem invertidos na API
+              const jogo = JOGOS_COPA.find(jl => {
+                const mandJ = limpaNome(jl.mandante);
+                const visJ = limpaNome(jl.visitante);
+                return (mandJ.includes(mandAPI) || mandAPI.includes(mandJ)) && 
+                       (visJ.includes(visAPI) || visAPI.includes(visJ));
+              });
+
               if (!jogo) return;
 
               if (["IN_PLAY", "PAUSED", "LIVE"].includes(m.status)) {
@@ -1072,12 +1076,20 @@ JORDÂNIA X ARGENTINA,2X0,1X4,1X3,0X2,1X3,0X4,0X1,1X4,1X3,0X2,0X2,1X3,2X1,0X3,1X
 
               const h = m.score?.fullTime?.home;
               const a = m.score?.fullTime?.away;
+              
               if (h !== null && h !== undefined && a !== null && a !== undefined) {
-                const placar = `${h}-${a}`;
-                if (novosRes[jogo.id] !== placar) { novosRes[jogo.id] = placar; atualizados++; }
+                // Se a API inverteu o mandante em relação ao nosso registro, invertemos os gols
+                const isInvertido = !limpaNome(jogo.mandante).includes(mandAPI);
+                const placar = isInvertido ? `${a}-${h}` : `${h}-${a}`;
+                
+                if (novosRes[jogo.id] !== placar) { 
+                  novosRes[jogo.id] = placar; 
+                  atualizados++; 
+                }
               }
             });
 
+            
             setResultados(novosRes);
             setJogosAoVivo(liveMap);
             setUltimaSync(new Date());
